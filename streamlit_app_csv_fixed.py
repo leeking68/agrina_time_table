@@ -4,9 +4,12 @@ import csv
 from collections import defaultdict
 from io import StringIO
 
+# ✅ 최상단에 위치해야 합니다
 st.set_page_config(page_title="출석부 곡 매칭기", layout="centered")
 
+# ✅ 앱 실행되었는지 확인을 위한 기본 출력
 st.title("🎵 출석부 기반 가능한 곡 추출기")
+st.write("앱이 실행되었습니다. 파일을 업로드하고 버튼을 눌러주세요.")
 st.write("1. CSV 파일을 업로드하세요.\n2. 버튼을 누르면 가능한 곡이 분석됩니다.\n3. 결과를 CSV로 다운로드 하세요.")
 
 uploaded_file = st.file_uploader("📂 CSV 파일 업로드", type=["csv"])
@@ -15,8 +18,12 @@ def load_schedule_and_songs_from_csv(file_content):
     schedule_dict = {}
     result_by_time = defaultdict(list)
 
-    file_content.seek(0)
-    reader = list(csv.reader(StringIO(file_content.read().decode("utf-8"))))
+    try:
+        file_content.seek(0)
+        reader = list(csv.reader(StringIO(file_content.read().decode("utf-8"))))
+    except UnicodeDecodeError:
+        st.error("❌ 파일 인코딩 오류: UTF-8 또는 UTF-8 with BOM 형식의 CSV 파일을 업로드해주세요.")
+        return {}
 
     for row in reader[1:12]:
         time = row[0].strip()
@@ -44,7 +51,7 @@ if uploaded_file:
         try:
             results = load_schedule_and_songs_from_csv(uploaded_file)
         except Exception as e:
-            st.error(f"❌ 오류 발생: {e}")
+            st.error(f"❌ 처리 중 오류 발생: {e}")
         else:
             if results:
                 st.success("✅ 가능한 곡 추출 완료!")
